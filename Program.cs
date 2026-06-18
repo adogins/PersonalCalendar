@@ -10,7 +10,8 @@ while (true)
     Console.WriteLine("2. Add Event");
     Console.WriteLine("3. Delete Event");
     Console.WriteLine("4. Edit Event");
-    Console.WriteLine("5. Exit");
+    Console.WriteLine("5. Monthly Calendar View");
+    Console.WriteLine("6. Exit");
     Console.Write("Choose: ");
 
     var choice = Console.ReadLine();
@@ -93,12 +94,68 @@ while (true)
             service.UpdateEvent(existing);
             Console.WriteLine("Event updated.");
             break;
-        
+
         case "5":
+            Console.Write("Enter year (e.g., 2026): ");
+            int year = int.Parse(Console.ReadLine()!);
+
+            Console.Write("Enter month (1-12): ");
+            int month = int.Parse(Console.ReadLine()!);
+
+            PrintMonthlyCalendar(year, month, service);
+            break;
+        
+        case "6":
             return;
         
         default:
             Console.WriteLine("Invalid choice.");
             break;
+    }
+
+    static void PrintMonthlyCalendar(int year, int month, CalendarService service)
+    {
+        Console.WriteLine($"\n--- {new DateTime(year, month, 1):MMMM yyyy} ---");
+
+        var events = service.GetEvents()
+            .Where(e => e.Start.Year == year && e.Start.Month == month)
+            .ToList();
+
+        var firstDay = new DateTime(year, month, 1);
+        int daysInMonth = DateTime.DaysInMonth(year, month);
+
+        Console.WriteLine("Su Mo Tu We Th Fr Sa");
+
+        int currentDayOfWeek = (int)firstDay.DayOfWeek;
+
+        // print initial spacing
+        for (int i = 0; i < currentDayOfWeek; i++) 
+            Console.Write("   ");
+        
+        for (int day = 1; day <= daysInMonth; day++)
+        {
+            bool hasEvent = events.Any(e => e.Start.Day == day);
+
+            if (hasEvent)
+                Console.ForegroundColor = ConsoleColor.Cyan;
+            
+            Console.Write($"{day,2} ");
+
+            Console.ResetColor();
+
+            currentDayOfWeek++;
+
+            if (currentDayOfWeek == 7)
+            {
+                Console.WriteLine();
+                currentDayOfWeek = 0;
+            }
+        }
+
+        Console.WriteLine("\n\nEvents:");
+        foreach (var ev in events)
+        {
+            Console.WriteLine($"{ev.Start:MM/dd} - {ev.Title} ({ev.Start:t} -> {ev.End:t})");
+        }
     }
 }
