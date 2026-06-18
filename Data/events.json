@@ -1,1 +1,9 @@
-[]
+[
+  {
+    "Id": "ddc22b32-ae77-42eb-b62b-d978af51a705",
+    "Title": "Dentist",
+    "Start": "2026-06-15T11:00:00",
+    "End": "2026-06-15T12:00:00",
+    "Description": null
+  }
+]

@@ -9,7 +9,8 @@ while (true)
     Console.WriteLine("1. View Events");
     Console.WriteLine("2. Add Event");
     Console.WriteLine("3. Delete Event");
-    Console.WriteLine("4. Exit");
+    Console.WriteLine("4. Edit Event");
+    Console.WriteLine("5. Exit");
     Console.Write("Choose: ");
 
     var choice = Console.ReadLine();
@@ -58,6 +59,42 @@ while (true)
             break;
 
         case "4":
+            Console.Write("Enter event ID to edit: ");
+            var editIdInput = Console.ReadLine();
+
+            if (!Guid.TryParse(editIdInput, out var editId))
+            {
+                Console.WriteLine("Invalid ID.");
+                break;
+            }
+
+            var existing = service.GetEvents().FirstOrDefault(e => e.Id == editId);
+            if (existing == null)
+            {
+                Console.WriteLine("Event not found.");
+                break;
+            }
+
+            Console.Write($"New title (leave blank to keep '{existing.Title}'): ");
+            var newTitle = Console.ReadLine();
+            if (!string.IsNullOrWhiteSpace(newTitle))
+                existing.Title = newTitle;
+
+            Console.Write($"New start (yyyy-mm-dd hh:mm) or blank to keep {existing.Start:g}: ");
+            var newStart = Console.ReadLine();
+            if (!string.IsNullOrWhiteSpace(newStart))
+                existing.Start = DateTime.Parse(newStart);
+
+            Console.Write($"New end (yyyy-mm-dd hh:mm) or blank to keep {existing.End:g}: ");
+            var newEnd = Console.ReadLine();
+            if (!string.IsNullOrWhiteSpace(newEnd))
+                existing.End = DateTime.Parse(newEnd);
+
+            service.UpdateEvent(existing);
+            Console.WriteLine("Event updated.");
+            break;
+        
+        case "5":
             return;
         
         default:
