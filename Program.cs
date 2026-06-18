@@ -11,7 +11,8 @@ while (true)
     Console.WriteLine("3. Delete Event");
     Console.WriteLine("4. Edit Event");
     Console.WriteLine("5. Monthly Calendar View");
-    Console.WriteLine("6. Exit");
+    Console.WriteLine("6. Weekly Calendar View");
+    Console.WriteLine("7. Exit");
     Console.Write("Choose: ");
 
     var choice = Console.ReadLine();
@@ -132,6 +133,12 @@ while (true)
             break;
         
         case "6":
+            Console.Write("Enter a date within the week you want to view (yyyy-mm-dd): ");
+            var weekDate = DateTime.Parse(Console.ReadLine()!);
+            PrintWeeklyCalendar(weekDate, service);
+            break;
+
+        case "7":
             return;
         
         default:
@@ -182,6 +189,49 @@ while (true)
         foreach (var ev in events)
         {
             Console.WriteLine($"{ev.Start:MM/dd} - {ev.Title} ({ev.Start:t} -> {ev.End:t})");
+        }
+    }
+
+    static void PrintWeeklyCalendar(DateTime date, CalendarService service)
+    {
+        // Find the Sunday of the week
+        int diff = (7 + (date.DayOfWeek - DayOfWeek.Sunday)) % 7;
+        DateTime weekStart = date.AddDays(-diff);
+        DateTime weekEnd = weekStart.AddDays(6);
+
+        Console.WriteLine($"\n--- Week of {weekStart:MMM dd} to {weekEnd:MMM dd} ---");
+
+        // Expand recurring events if you have that feature
+        var events = ExpandRecurringEvents(service.GetEvents())
+            .Where(e => e.Start.Date >= weekStart.Date && e.Start.Date <= weekEnd.Date)
+            .OrderBy(e => e.Start)
+            .ToList();
+        
+        // Print header
+        Console.WriteLine("Su       Mo       Tu       We       Th       Fr       Sa");
+
+        // Print each day with events
+        for (int i = 0; i < 7; i++)
+        {
+            var current = weekStart.AddDays(i);
+            Console.Write($"{current:dd} ");
+
+            var todaysEvents = events.Where(e => e.Start.Date == current.Date).ToList();
+
+            if (todaysEvents.Any())
+            {
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.Write($"({todaysEvents.Count})");
+                Console.ResetColor();
+            }
+            Console.Write("   ");
+        }
+
+        Console.WriteLine("\n\nEvents:");
+
+        foreach (var ev in events)
+        {
+            Console.WriteLine($"{ev.Start:ddd MM/dd HH:mm} - {ev.Title}");
         }
     }
 
