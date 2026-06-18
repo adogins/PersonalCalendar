@@ -1,0 +1,15 @@
+C:\Users\amdog\OneDrive\Desktop\PersonalCalendar\obj\Debug\net10.0\PersonalCalendar.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\amdog\OneDrive\Desktop\PersonalCalendar\obj\Debug\net10.0\PersonalCalendar.AssemblyInfoInputs.cache
+C:\Users\amdog\OneDrive\Desktop\PersonalCalendar\obj\Debug\net10.0\PersonalCalendar.AssemblyInfo.cs
+C:\Users\amdog\OneDrive\Desktop\PersonalCalendar\obj\Debug\net10.0\PersonalCalendar.csproj.CoreCompileInputs.cache
+C:\Users\amdog\OneDrive\Desktop\PersonalCalendar\obj\Debug\net10.0\PersonalCalendar.sourcelink.json
+C:\Users\amdog\OneDrive\Desktop\PersonalCalendar\bin\Debug\net10.0\PersonalCalendar.exe
+C:\Users\amdog\OneDrive\Desktop\PersonalCalendar\bin\Debug\net10.0\PersonalCalendar.deps.json
+C:\Users\amdog\OneDrive\Desktop\PersonalCalendar\bin\Debug\net10.0\PersonalCalendar.runtimeconfig.json
+C:\Users\amdog\OneDrive\Desktop\PersonalCalendar\bin\Debug\net10.0\PersonalCalendar.dll
+C:\Users\amdog\OneDrive\Desktop\PersonalCalendar\bin\Debug\net10.0\PersonalCalendar.pdb
+C:\Users\amdog\OneDrive\Desktop\PersonalCalendar\obj\Debug\net10.0\PersonalCalendar.dll
+C:\Users\amdog\OneDrive\Desktop\PersonalCalendar\obj\Debug\net10.0\refint\PersonalCalendar.dll
+C:\Users\amdog\OneDrive\Desktop\PersonalCalendar\obj\Debug\net10.0\PersonalCalendar.pdb
+C:\Users\amdog\OneDrive\Desktop\PersonalCalendar\obj\Debug\net10.0\PersonalCalendar.genruntimeconfig.cache
+C:\Users\amdog\OneDrive\Desktop\PersonalCalendar\obj\Debug\net10.0\ref\PersonalCalendar.dll
