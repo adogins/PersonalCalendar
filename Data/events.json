@@ -4,13 +4,26 @@
     "Title": "Dentist",
     "Start": "2026-06-15T11:00:00",
     "End": "2026-06-15T12:00:00",
-    "Description": null
+    "Description": null,
+    "Recurrence": 0,
+    "RecurrenceEnd": null
   },
   {
     "Id": "d0b53bd5-3b0b-4c89-8019-74748755e853",
     "Title": "Airport",
     "Start": "2026-06-21T05:30:00",
     "End": "2026-06-21T10:30:00",
-    "Description": null
+    "Description": null,
+    "Recurrence": 0,
+    "RecurrenceEnd": null
+  },
+  {
+    "Id": "e83c4ae8-3f58-476d-8bf0-6612ef91de35",
+    "Title": "Meeting",
+    "Start": "2026-06-19T08:30:00",
+    "End": "2026-06-19T08:45:00",
+    "Description": null,
+    "Recurrence": 2,
+    "RecurrenceEnd": "2026-12-31T00:00:00"
   }
 ]

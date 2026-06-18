@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("PersonalCalendar")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+b50eb8c486bf1c51416325fd246d05cd678f260a")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+f7fd1a1223c3ac4ab48167f6f2c72320ed7116b5")]
 [assembly: System.Reflection.AssemblyProductAttribute("PersonalCalendar")]
 [assembly: System.Reflection.AssemblyTitleAttribute("PersonalCalendar")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

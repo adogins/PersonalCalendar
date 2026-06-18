@@ -19,7 +19,9 @@ while (true)
     switch (choice)
     {
         case "1":
-            foreach (var ev in service.GetEvents())
+            var expanded = ExpandRecurringEvents(service.GetEvents())
+                .OrderBy(e => e.Start);
+            foreach (var ev in expanded)
             {
                 Console.WriteLine($"{ev.Id} | {ev.Title} | {ev.Start:g} -> {ev.End:g}");
             }
@@ -35,11 +37,35 @@ while (true)
             Console.Write("End (yyyy-mm-dd hh:mm): ");
             var end = DateTime.Parse(Console.ReadLine() ?? throw new InvalidOperationException());
 
+            Console.Write("Does this event repeat? (none/daily/weekly/monthly/yearly): ");
+            var recurrenceInput = Console.ReadLine()?.ToLower();
+
+            RecurrenceType recurrence = recurrenceInput switch
+            {
+                "daily" => RecurrenceType.Daily,
+                "weekly" => RecurrenceType.Weekly,
+                "monthly" => RecurrenceType.Monthly,
+                "yearly" => RecurrenceType.Yearly,
+                _ => RecurrenceType.None
+            };
+
+            DateTime? recurrenceEnd = null;
+
+            if (recurrence != RecurrenceType.None)
+            {
+                Console.Write("Enter recurrence end date (yyyy-mm-dd) or leave blank for no end: ");
+                var endInput = Console.ReadLine();
+                if (!string.IsNullOrWhiteSpace(endInput))
+                    recurrenceEnd = DateTime.Parse(endInput);
+            }
+
             service.AddEvent(new CalendarEvent
             {
                 Title = title,
                 Start = start,
-                End = end
+                End = end,
+                Recurrence = recurrence,
+                RecurrenceEnd = recurrenceEnd
             });
 
             Console.WriteLine("Event added.");
@@ -117,7 +143,7 @@ while (true)
     {
         Console.WriteLine($"\n--- {new DateTime(year, month, 1):MMMM yyyy} ---");
 
-        var events = service.GetEvents()
+        var events = ExpandRecurringEvents(service.GetEvents())
             .Where(e => e.Start.Year == year && e.Start.Month == month)
             .ToList();
 
@@ -156,6 +182,43 @@ while (true)
         foreach (var ev in events)
         {
             Console.WriteLine($"{ev.Start:MM/dd} - {ev.Title} ({ev.Start:t} -> {ev.End:t})");
+        }
+    }
+
+    static IEnumerable<CalendarEvent> ExpandRecurringEvents(IEnumerable<CalendarEvent> events)
+    {
+        foreach (var ev in events)
+        {
+            if (ev.Recurrence == RecurrenceType.None)
+            {
+                yield return ev;
+                continue;
+            }
+
+            var current = ev.Start;
+            var end = ev.RecurrenceEnd ?? ev.Start.AddYears(1); // default: 1 yeat of repeats
+
+            while (current <= end)
+            {
+                yield return new CalendarEvent
+                {
+                    Id = ev.Id,
+                    Title = ev.Title,
+                    Start = current,
+                    End = current.Add(ev.End - ev.Start),
+                    Recurrence = ev.Recurrence,
+                    RecurrenceEnd = ev.RecurrenceEnd
+                };
+
+                current = ev.Recurrence switch
+                {
+                    RecurrenceType.Daily => current.AddDays(1),
+                    RecurrenceType.Weekly => current.AddDays(7),
+                    RecurrenceType.Monthly => current.AddMonths(1),
+                    RecurrenceType.Yearly => current.AddYears(1),
+                    _ => current
+                };
+            }
         }
     }
 }
