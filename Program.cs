@@ -22,21 +22,20 @@ while (true)
         case "1":
             var expanded = ExpandRecurringEvents(service.GetEvents())
                 .OrderBy(e => e.Start);
+
             foreach (var ev in expanded)
-            {
                 Console.WriteLine($"{ev.Id} | {ev.Title} | {ev.Start:g} -> {ev.End:g}");
-            }
             break;
-        
+
         case "2":
             Console.Write("Title: ");
             var title = Console.ReadLine() ?? string.Empty;
 
             Console.Write("Start (yyyy-mm-dd hh:mm): ");
-            var start = DateTime.Parse(Console.ReadLine() ?? throw new InvalidOperationException());
+            var start = DateTime.Parse(Console.ReadLine()!);
 
             Console.Write("End (yyyy-mm-dd hh:mm): ");
-            var end = DateTime.Parse(Console.ReadLine() ?? throw new InvalidOperationException());
+            var end = DateTime.Parse(Console.ReadLine()!);
 
             Console.Write("Does this event repeat? (none/daily/weekly/monthly/yearly): ");
             var recurrenceInput = Console.ReadLine()?.ToLower();
@@ -54,24 +53,34 @@ while (true)
 
             if (recurrence != RecurrenceType.None)
             {
-                Console.Write("Enter recurrence end date (yyyy-mm-dd) or leave blank for no end: ");
+                Console.Write("Enter recurrence end date (yyyy-mm-dd) or leave blank: ");
                 var endInput = Console.ReadLine();
                 if (!string.IsNullOrWhiteSpace(endInput))
                     recurrenceEnd = DateTime.Parse(endInput);
             }
 
-            service.AddEvent(new CalendarEvent
+            var newEvent = new CalendarEvent
             {
                 Title = title,
                 Start = start,
                 End = end,
                 Recurrence = recurrence,
                 RecurrenceEnd = recurrenceEnd
-            });
+            };
 
-            Console.WriteLine("Event added.");
+            if (service.HasConflict(newEvent))
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("Conflict detected! This event overlaps with an existing event.");
+                Console.ResetColor();
+            }
+            else
+            {
+                service.AddEvent(newEvent);
+                Console.WriteLine("Event added.");
+            }
             break;
-        
+
         case "3":
             Console.Write("Enter event ID: ");
             var idInput = Console.ReadLine();
@@ -80,10 +89,7 @@ while (true)
                 service.DeleteEvent(id);
                 Console.WriteLine("Event deleted.");
             }
-            else
-            {
-                Console.WriteLine("Invalid ID.");
-            }
+            else Console.WriteLine("Invalid ID.");
             break;
 
         case "4":
@@ -118,8 +124,17 @@ while (true)
             if (!string.IsNullOrWhiteSpace(newEnd))
                 existing.End = DateTime.Parse(newEnd);
 
-            service.UpdateEvent(existing);
-            Console.WriteLine("Event updated.");
+            if (service.HasConflict(existing))
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("Conflict detected! Update canceled.");
+                Console.ResetColor();
+            }
+            else
+            {
+                service.UpdateEvent(existing);
+                Console.WriteLine("Event updated.");
+            }
             break;
 
         case "5":
@@ -131,144 +146,135 @@ while (true)
 
             PrintMonthlyCalendar(year, month, service);
             break;
-        
+
         case "6":
-            Console.Write("Enter a date within the week you want to view (yyyy-mm-dd): ");
+            Console.Write("Enter a date within the week (yyyy-mm-dd): ");
             var weekDate = DateTime.Parse(Console.ReadLine()!);
             PrintWeeklyCalendar(weekDate, service);
             break;
 
         case "7":
             return;
-        
+
         default:
             Console.WriteLine("Invalid choice.");
             break;
     }
+}
 
-    static void PrintMonthlyCalendar(int year, int month, CalendarService service)
+static void PrintMonthlyCalendar(int year, int month, CalendarService service)
+{
+    Console.WriteLine($"\n--- {new DateTime(year, month, 1):MMMM yyyy} ---");
+
+    var events = ExpandRecurringEvents(service.GetEvents())
+        .Where(e => e.Start.Year == year && e.Start.Month == month)
+        .ToList();
+
+    var firstDay = new DateTime(year, month, 1);
+    int daysInMonth = DateTime.DaysInMonth(year, month);
+
+    Console.WriteLine("Su Mo Tu We Th Fr Sa");
+
+    int currentDayOfWeek = (int)firstDay.DayOfWeek;
+
+    for (int i = 0; i < currentDayOfWeek; i++)
+        Console.Write("   ");
+
+    for (int day = 1; day <= daysInMonth; day++)
     {
-        Console.WriteLine($"\n--- {new DateTime(year, month, 1):MMMM yyyy} ---");
+        bool hasEvent = events.Any(e => e.Start.Day == day);
 
-        var events = ExpandRecurringEvents(service.GetEvents())
-            .Where(e => e.Start.Year == year && e.Start.Month == month)
-            .ToList();
+        if (hasEvent)
+            Console.ForegroundColor = ConsoleColor.Cyan;
 
-        var firstDay = new DateTime(year, month, 1);
-        int daysInMonth = DateTime.DaysInMonth(year, month);
+        Console.Write($"{day,2} ");
 
-        Console.WriteLine("Su Mo Tu We Th Fr Sa");
+        Console.ResetColor();
 
-        int currentDayOfWeek = (int)firstDay.DayOfWeek;
+        currentDayOfWeek++;
 
-        // print initial spacing
-        for (int i = 0; i < currentDayOfWeek; i++) 
-            Console.Write("   ");
-        
-        for (int day = 1; day <= daysInMonth; day++)
+        if (currentDayOfWeek == 7)
         {
-            bool hasEvent = events.Any(e => e.Start.Day == day);
+            Console.WriteLine();
+            currentDayOfWeek = 0;
+        }
+    }
 
-            if (hasEvent)
-                Console.ForegroundColor = ConsoleColor.Cyan;
-            
-            Console.Write($"{day,2} ");
+    Console.WriteLine("\n\nEvents:");
+    foreach (var ev in events)
+        Console.WriteLine($"{ev.Start:MM/dd} - {ev.Title} ({ev.Start:t} -> {ev.End:t})");
+}
 
+static void PrintWeeklyCalendar(DateTime date, CalendarService service)
+{
+    int diff = (7 + (date.DayOfWeek - DayOfWeek.Sunday)) % 7;
+    DateTime weekStart = date.AddDays(-diff);
+    DateTime weekEnd = weekStart.AddDays(6);
+
+    Console.WriteLine($"\n--- Week of {weekStart:MMM dd} to {weekEnd:MMM dd} ---");
+
+    var events = ExpandRecurringEvents(service.GetEvents())
+        .Where(e => e.Start.Date >= weekStart.Date && e.Start.Date <= weekEnd.Date)
+        .OrderBy(e => e.Start)
+        .ToList();
+
+    Console.WriteLine("Su       Mo       Tu       We       Th       Fr       Sa");
+
+    for (int i = 0; i < 7; i++)
+    {
+        var current = weekStart.AddDays(i);
+        Console.Write($"{current:dd} ");
+
+        var todaysEvents = events.Where(e => e.Start.Date == current.Date).ToList();
+
+        if (todaysEvents.Any())
+        {
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.Write($"({todaysEvents.Count})");
             Console.ResetColor();
-
-            currentDayOfWeek++;
-
-            if (currentDayOfWeek == 7)
-            {
-                Console.WriteLine();
-                currentDayOfWeek = 0;
-            }
         }
 
-        Console.WriteLine("\n\nEvents:");
-        foreach (var ev in events)
-        {
-            Console.WriteLine($"{ev.Start:MM/dd} - {ev.Title} ({ev.Start:t} -> {ev.End:t})");
-        }
+        Console.Write("   ");
     }
 
-    static void PrintWeeklyCalendar(DateTime date, CalendarService service)
+    Console.WriteLine("\n\nEvents:");
+    foreach (var ev in events)
+        Console.WriteLine($"{ev.Start:ddd MM/dd HH:mm} - {ev.Title}");
+}
+
+static IEnumerable<CalendarEvent> ExpandRecurringEvents(IEnumerable<CalendarEvent> events)
+{
+    foreach (var ev in events)
     {
-        // Find the Sunday of the week
-        int diff = (7 + (date.DayOfWeek - DayOfWeek.Sunday)) % 7;
-        DateTime weekStart = date.AddDays(-diff);
-        DateTime weekEnd = weekStart.AddDays(6);
-
-        Console.WriteLine($"\n--- Week of {weekStart:MMM dd} to {weekEnd:MMM dd} ---");
-
-        // Expand recurring events if you have that feature
-        var events = ExpandRecurringEvents(service.GetEvents())
-            .Where(e => e.Start.Date >= weekStart.Date && e.Start.Date <= weekEnd.Date)
-            .OrderBy(e => e.Start)
-            .ToList();
-        
-        // Print header
-        Console.WriteLine("Su       Mo       Tu       We       Th       Fr       Sa");
-
-        // Print each day with events
-        for (int i = 0; i < 7; i++)
+        if (ev.Recurrence == RecurrenceType.None)
         {
-            var current = weekStart.AddDays(i);
-            Console.Write($"{current:dd} ");
-
-            var todaysEvents = events.Where(e => e.Start.Date == current.Date).ToList();
-
-            if (todaysEvents.Any())
-            {
-                Console.ForegroundColor = ConsoleColor.Green;
-                Console.Write($"({todaysEvents.Count})");
-                Console.ResetColor();
-            }
-            Console.Write("   ");
+            yield return ev;
+            continue;
         }
 
-        Console.WriteLine("\n\nEvents:");
+        var current = ev.Start;
+        var end = ev.RecurrenceEnd ?? ev.Start.AddYears(1);
 
-        foreach (var ev in events)
+        while (current <= end)
         {
-            Console.WriteLine($"{ev.Start:ddd MM/dd HH:mm} - {ev.Title}");
-        }
-    }
-
-    static IEnumerable<CalendarEvent> ExpandRecurringEvents(IEnumerable<CalendarEvent> events)
-    {
-        foreach (var ev in events)
-        {
-            if (ev.Recurrence == RecurrenceType.None)
+            yield return new CalendarEvent
             {
-                yield return ev;
-                continue;
-            }
+                Id = ev.Id,
+                Title = ev.Title,
+                Start = current,
+                End = current.Add(ev.End - ev.Start),
+                Recurrence = ev.Recurrence,
+                RecurrenceEnd = ev.RecurrenceEnd
+            };
 
-            var current = ev.Start;
-            var end = ev.RecurrenceEnd ?? ev.Start.AddYears(1); // default: 1 yeat of repeats
-
-            while (current <= end)
+            current = ev.Recurrence switch
             {
-                yield return new CalendarEvent
-                {
-                    Id = ev.Id,
-                    Title = ev.Title,
-                    Start = current,
-                    End = current.Add(ev.End - ev.Start),
-                    Recurrence = ev.Recurrence,
-                    RecurrenceEnd = ev.RecurrenceEnd
-                };
-
-                current = ev.Recurrence switch
-                {
-                    RecurrenceType.Daily => current.AddDays(1),
-                    RecurrenceType.Weekly => current.AddDays(7),
-                    RecurrenceType.Monthly => current.AddMonths(1),
-                    RecurrenceType.Yearly => current.AddYears(1),
-                    _ => current
-                };
-            }
+                RecurrenceType.Daily => current.AddDays(1),
+                RecurrenceType.Weekly => current.AddDays(7),
+                RecurrenceType.Monthly => current.AddMonths(1),
+                RecurrenceType.Yearly => current.AddYears(1),
+                _ => current
+            };
         }
     }
 }

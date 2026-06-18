@@ -25,5 +25,14 @@
     "Description": null,
     "Recurrence": 2,
     "RecurrenceEnd": "2026-12-31T00:00:00"
+  },
+  {
+    "Id": "4b87fe46-54c6-40b6-b205-8a8dc943bf4e",
+    "Title": "Shopping",
+    "Start": "2026-06-18T16:00:00",
+    "End": "2026-06-18T18:00:00",
+    "Description": null,
+    "Recurrence": 0,
+    "RecurrenceEnd": null
   }
 ]
